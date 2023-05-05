@@ -1,130 +1,183 @@
-#include "Commands.h"
 #include <iostream>
 #include <math.h>
 #include <numeric>
 #include <algorithm>
+#include <functional>
+#include "Commands.h"
+#include "Operators.h"
+#include "AreaFunc.h"
 
-double trianglArea(const Point& point_1, const Point& point_2, const Point& point_3) {
-	double ar = 0.0;
-	ar = 0.5 * abs((point_2.x - point_1.x) * (point_3.y - point_1.y)
-		- (point_3.x - point_1.x) * (point_2.y - point_1.y));
-	return ar;
-}
-double area(Polygon& poly) {
-	double ar = 0.0;
-	int j = 1;
-	for (int i = 0; i < poly.points.size() - 2; ++i) {
-		ar += trianglArea(poly.points[0], poly.points[j], poly.points[j + 1]);
-		j++;
+using namespace std::placeholders;
+
+namespace myspace {
+
+	double ifAreaEven::operator()(double sum, const Polygon& poly) {
+		if (poly.points.size() % 2 != 0) {
+			return sum + area(poly);
+		}
+		return sum;
 	}
-	return ar;
-}
 
-Area areaEven(std::vector< Polygon >& poly) {
-	Area ar{};
-	for (auto i = poly.begin(); i != poly.end(); ++i) {
-		auto ans = std::find_if(i, poly.end(),
-			[](Polygon poly) { return poly.points.size() % 2 != 0; });
-		if (ans != poly.end()) {
-			ar.ar += area(*ans);
-			i = ans;
+	double ifAreaOdd::operator()(double sum, const Polygon& poly) {
+		if (poly.points.size() % 2 == 0) {
+			return sum + area(poly);
 		}
-		else {
-			break;
-		}
+		return sum;
 	}
-	return ar;
-}
 
-Area areaOdd(std::vector< Polygon >& poly) {
-	Area ar{};
-	for (auto i = poly.begin(); i != poly.end(); ++i) {
-		auto ans = std::find_if(i, poly.end(),
-			[](Polygon poly) { return poly.points.size() % 2 == 0; });
-		if (ans != poly.end()) {
-			ar.ar += area(*ans);
-			i = ans;
+	double ifAreaVert::operator()(double sum, int corn, const Polygon& poly) {
+		if (poly.points.size() == corn) {
+			return sum + area(poly);
 		}
-		else {
-			break;
-		}
+		return sum;
 	}
-	return ar;
-}
 
-Area areaMean(std::vector<Polygon>& poly)
-{
-	Area ans{};
-	ans.ar = std::accumulate(poly.cbegin(), poly.cend(), 0.0,
-		[](double a, Polygon p) { return a + area(p); });
-	ans.ar /= poly.size();
-	return ans;
-}
-
-Area areaVert(std::vector<Polygon>& poly, const int& corn)
-{
-	Area ar{};
-	for (auto i = poly.begin(); i != poly.end(); ++i) {
-		auto ans = std::find_if(i, poly.end(),
-			[corn](Polygon poly) { return poly.points.size() == corn; });
-		if (ans != poly.end()) {
-			ar.ar += area(*ans);
-			i = ans;
-		}
-		else {
-			break;
-		}
+	Area areaEven(const std::vector< Polygon >& poly) {
+		Area ar{};
+		ar.ar = std::accumulate(
+			poly.begin(),
+			poly.end(),
+			0.0,
+			std::bind(ifAreaEven(), _1, _2)
+		);
+		return ar;
 	}
-	return ar;
-}
 
-int countEven(std::vector<Polygon>& poly)
-{
-	int ans = std::count_if(poly.cbegin(), poly.cend(),
-		[](Polygon p) { return p.points.size() % 2 != 0; });
-	return ans;
-}
+	Area areaOdd(const std::vector< Polygon >& poly) {
+		Area ar{};
+		ar.ar = std::accumulate(
+			poly.begin(),
+			poly.end(),
+			0.0,
+			std::bind(ifAreaOdd(), _1, _2)
+		);
+		return ar;
+	}
 
-int countOdd(std::vector<Polygon>& poly)
-{
-	int ans = std::count_if(poly.cbegin(), poly.cend(),
-		[](Polygon p) { return p.points.size() % 2 == 0; });
-	return ans;
-}
+	Area areaMean(const std::vector< Polygon >& poly) {
+		Area ans{};
+		ans.ar = std::accumulate(
+			poly.cbegin(), 
+			poly.cend(), 
+			0.0,
+			[](double sum, const Polygon& p)
+			{ return sum + area(p); }
+		);
+		ans.ar /= poly.size();
+		return ans;
+	}
 
-int countVert(std::vector<Polygon>& poly, const int& corn)
-{
-	int ans = std::count_if(poly.cbegin(), poly.cend(),
-		[corn](Polygon p) { return p.points.size() == corn; });
-	return ans;
-}
+	Area areaVert(const std::vector< Polygon >& poly, int corn) {
+		Area ar{};
+		ar.ar = std::accumulate(
+			poly.begin(),
+			poly.end(),
+			0.0,
+			std::bind(ifAreaVert(), _1, corn, _2)
+		);
+		return ar;
+	}
 
-Area maxArea(std::vector<Polygon>& poly)
-{
-	auto temp = std::max_element(poly.begin(), poly.end(), 
-		[](Polygon p1, Polygon p2) { return area(p1) < area(p2); });
-	Area ans{ area(*temp) };
-	return ans;
-}
+	int countEven(const std::vector< Polygon >& poly) {
+		__int64 ans = std::count_if(
+			poly.cbegin(), 
+			poly.cend(),
+			[](const Polygon& p)
+			{ return p.points.size() % 2 != 0; }
+		);
+		return static_cast<int>(ans);
+	}
 
-int maxVert(std::vector<Polygon>& poly)
-{
-	auto ans = std::max_element(poly.cbegin(), poly.cend(),
-		[](Polygon p1, Polygon p2) { return p1.points.size() < p2.points.size(); });
-	return (*ans).points.size();
-}
+	int countOdd(const std::vector< Polygon >& poly) {
+		__int64 ans = std::count_if(
+			poly.cbegin(), 
+			poly.cend(),
+			[](const Polygon& p)
+			{ return p.points.size() % 2 == 0; }
+		);
+		return static_cast<int>(ans);
+	}
 
-Area minArea(std::vector<Polygon>& poly)
-{
-	auto temp = std::min_element(poly.begin(), poly.end(),
-		[](Polygon p1, Polygon p2) { return area(p1) < area(p2); });
-	Area ans{ area(*temp) };
-	return ans;
-}
+	int countVert(const std::vector< Polygon >& poly, int corn) {
+		__int64 ans = std::count_if(
+			poly.cbegin(), 
+			poly.cend(),
+			[corn](const Polygon& p)
+			{ return p.points.size() == corn; }
+		);
+		return static_cast<int>(ans);
+	}
 
-int minVert(std::vector<Polygon>& poly)
-{
-	auto ans = std::min_element(poly.cbegin(), poly.cend(),
-		[](Polygon p1, Polygon p2) { return p1.points.size() < p2.points.size(); });
-	return (*ans).points.size();
+	Area maxArea(const std::vector< Polygon >& poly) {
+		auto temp = std::max_element(
+			poly.begin(), 
+			poly.end(),
+			[](const Polygon& p1,const Polygon& p2)
+			{ return area(p1) < area(p2); }
+		);
+		Area ans{ area(*temp) };
+		return ans;
+	}
+
+	int maxVert(const std::vector< Polygon >& poly) {
+		auto ans = std::max_element(
+			poly.cbegin(), 
+			poly.cend(),
+			[](const Polygon& p1, const Polygon& p2)
+			{ return p1.points.size() < p2.points.size(); }
+		);
+		return static_cast<int>((*ans).points.size());
+	}
+
+	Area minArea(const std::vector< Polygon >& poly) {
+		auto temp = std::min_element(
+			poly.begin(), 
+			poly.end(),
+			[](const Polygon& p1, const Polygon& p2)
+			{ return area(p1) < area(p2); }
+		);
+		Area ans{ area(*temp) };
+		return ans;
+	}
+
+	int minVert(const std::vector< Polygon >& poly) {
+		auto ans = std::min_element(
+			poly.cbegin(), 
+			poly.cend(),
+			[](const Polygon& p1, const Polygon& p2)
+			{ return p1.points.size() < p2.points.size(); }
+		);
+		return static_cast<int>((*ans).points.size());
+	}
+
+	int lessArea(const Polygon& other, const std::vector< Polygon >& poly) {
+		Area otherArea{ area(other) };
+		__int64 ans = std::count_if(
+			poly.cbegin(), 
+			poly.cend(),
+			[&otherArea](const Polygon& p)
+			{ return area(p) < otherArea.ar; }
+		);
+		return static_cast<int>(ans);
+	}
+
+	int maxSeq(const Polygon& other, const std::vector< Polygon >& poly) {
+		int maxim = 0;
+		auto ans = std::accumulate(
+			poly.begin(),
+			poly.end(),
+			0,
+			[&maxim, &other](int sum, const Polygon& p) {
+				if (p == other) {
+					sum++;
+				}
+				else {
+					maxim = std::max(sum, maxim);
+					sum = 0;
+				}
+				return sum;
+			}
+		);
+		return maxim;
+	}
 }

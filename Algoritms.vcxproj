@@ -128,22 +128,22 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Commands.cpp" />
+    <ClCompile Include="AreaFunc.cpp" />
     <ClCompile Include="Operators.cpp" />
     <ClCompile Include="Source.cpp" />
-    <ClCompile Include="StreamGuard.cpp" />
+    <ClCompile Include="StreamStruct.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AddStructs.h" />
-    <ClInclude Include="Area.h" />
+    <ClInclude Include="AreaFunc.h" />
     <ClInclude Include="Commands.h" />
     <ClInclude Include="Operators.h" />
-    <ClInclude Include="Point.h" />
     <ClInclude Include="Polygon.h" />
-    <ClInclude Include="StreamGuard.h" />
+    <ClInclude Include="StreamStruct.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="commands.txt" />
     <Text Include="shapes.txt" />
+    <Text Include="test.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

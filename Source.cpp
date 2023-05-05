@@ -7,8 +7,13 @@
 #include "Operators.h"
 #include "Commands.h"
 
+using myspace::Polygon;
 
+const int IGNORE = 1000;
+
+void invalid(std::fstream& in);
 void openFile(std::fstream& in, std::string& fileName);
+void printShapes(const std::vector< Polygon >& shapes);
 void readShapes(std::fstream& in, std::vector< Polygon >& shapes);
 void doCommands(std::fstream& in, std::vector< Polygon >& shapes);
 
@@ -19,10 +24,7 @@ int main() {
 		openFile(in, fileName);
 		std::vector< Polygon > shapes;
 		readShapes(in, shapes);
-
-		std::for_each(shapes.cbegin(), shapes.cend(),
-			[](Polygon p) { std::cout << p << p.points.size() << '\n'; });
-
+		printShapes(shapes);
 		openFile(in, fileName);
 		doCommands(in, shapes);
 	}
@@ -30,7 +32,6 @@ int main() {
 		std::cerr << "Error: " << e.what();
 		exit(-1);
 	}
-
 	return 0;
 }
 
@@ -48,26 +49,15 @@ void openFile(std::fstream& in, std::string& fileName) {
 
 void readShapes(std::fstream& in, std::vector< Polygon >& shapes) {
 	while (!in.eof()) {
-		int corners = 0;
-		in >> corners;
-		if (in.peek() == '.' || in.peek() == ',') {
-			throw std::exception("incorrect count of corner.");
-		}
 		Polygon poly;
-		/*std::copy(
-			std::istream_iterator<Polygon>(in),
-			std::istream_iterator<Polygon>(),
-			std::back_inserter(poly)
-		);*/
-		for (int i = 0; i < corners; ++i) {
-			in >> poly;
-		}
+		std::copy(
+			std::istream_iterator< Polygon >(in),
+			std::istream_iterator< Polygon >(),
+			std::back_inserter(shapes)
+		);
 		if (!in) {
 			in.clear();
-			in.ignore();
-		}
-		else {
-			shapes.push_back(poly);
+			in.ignore(IGNORE, '\n');
 		}
 	}
 	in.close();
@@ -89,8 +79,11 @@ void doCommands(std::fstream& in, std::vector< Polygon >& shapes) {
 			else if (com2 == "MEAN") {
 				std::cout << "AREA MEAN: " << areaMean(shapes) << '\n';
 			}
-			else if (std::all_of(com2.begin(), com2.end(), ::isdigit)) {
+			else if (std::all_of(com2.begin(), com2.end(), std::isdigit) && (com2 != "")) {
 				std::cout << "AREA " << com2 << ": " << areaVert(shapes, std::stoi(com2)) << '\n';
+			}
+			else {
+				invalid(in);
 			}
 		}
 		else if (com1 == "MAX") {
@@ -101,6 +94,9 @@ void doCommands(std::fstream& in, std::vector< Polygon >& shapes) {
 			else if (com2 == "VERTEXES") {
 				std::cout << "MAX VERTEXES: " << maxVert(shapes) << '\n';
 			}
+			else {
+				invalid(in);
+			}
 		}
 		else if (com1 == "MIN") {
 			in >> com2;
@@ -109,6 +105,9 @@ void doCommands(std::fstream& in, std::vector< Polygon >& shapes) {
 			}
 			else if (com2 == "VERTEXES") {
 				std::cout << "MIN VERTEXES: " << minVert(shapes) << '\n';
+			}
+			else {
+				invalid(in);
 			}
 		}
 		else if (com1 == "COUNT") {
@@ -119,18 +118,50 @@ void doCommands(std::fstream& in, std::vector< Polygon >& shapes) {
 			else if (com2 == "ODD") {
 				std::cout << "COUNT ODD: " << countOdd(shapes) << '\n';
 			}
-			else if (std::all_of(com2.begin(), com2.end(), ::isdigit)) {
+			else if (std::all_of(com2.begin(), com2.end(), std::isdigit) && (com2 != "")) {
 				std::cout << "COUNT " << com2 << ": " << countVert(shapes, std::stoi(com2)) << '\n';
+			}
+			else {
+				invalid(in);
+			}
+		}
+		else if (com1 == "LESSAREA") {
+			Polygon poly;
+			in >> poly;
+			if (!in) {
+				invalid(in);
+			}
+			else {
+				std::cout << "LESSAREA " << poly << ": " << lessArea(poly, shapes) << '\n';
+			}
+		}
+		else if (com1 == "MAXSEQ") {
+			Polygon poly;
+			in >> poly;
+			if (!in) {
+				invalid(in);
+			}
+			else {
+				std::cout << "MAXSEQ " << poly << ": " << maxSeq(poly, shapes) << '\n';
 			}
 		}
 		else {
-			std::cerr << "INVALID COMMAND\n";
-			in.clear();
-			in.ignore();
+			invalid(in);
 		}
 	}
 	in.close();
 }
-	
-	//LESSAREA <Polygon> Команда подсчитывает количество фигур с площадью меньшей, чем площадь фигуры, переданной в параметре.
-	//MAXSEQ <Polygon> Подсчёт максимального количества идущих подряд фигур идентичной указанной в параметрах
+
+void printShapes(const std::vector< Polygon >& shapes) {
+	std::copy(
+		std::begin(shapes),
+		std::end(shapes),
+		std::ostream_iterator< Polygon >(std::cout, "\n")
+	);
+}
+
+void invalid(std::fstream& in) {
+	std::cerr << "INVALID COMMAND\n";
+	in.clear();
+	in.ignore(IGNORE, '\n');
+}
