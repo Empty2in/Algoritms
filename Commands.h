@@ -2,6 +2,7 @@
 #define COMMANDS_H
 
 #include <vector>
+#include <functional>
 #include "Polygon.h"
 
 namespace myspace {
@@ -15,6 +16,9 @@ namespace myspace {
 	struct ifAreaVert {
 		double operator()(double sum, int corn, const Polygon& poly);
 	};
+
+	void evenOrOdd(Area& ar, const std::vector< Polygon >& poly, std::function< double(double, const Polygon&) > funct);
+	bool isEmpty(const std::vector< Polygon >& poly);
 
 	Area areaEven(const std::vector< Polygon >& poly);
 	Area areaOdd(const std::vector< Polygon >& poly);

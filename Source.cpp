@@ -49,15 +49,15 @@ void openFile(std::fstream& in, std::string& fileName) {
 
 void readShapes(std::fstream& in, std::vector< Polygon >& shapes) {
 	while (!in.eof()) {
-		Polygon poly;
-		std::copy(
+		std::copy_if(
 			std::istream_iterator< Polygon >(in),
 			std::istream_iterator< Polygon >(),
-			std::back_inserter(shapes)
+			std::back_inserter(shapes),
+			[](const Polygon& poly)
+			{ return poly.points.size() != 0; }
 		);
-		if (!in) {
+		if (!in && !in.eof()) {
 			in.clear();
-			in.ignore(IGNORE, '\n');
 		}
 	}
 	in.close();
@@ -68,7 +68,10 @@ void doCommands(std::fstream& in, std::vector< Polygon >& shapes) {
 		std::string com1 = "";
 		std::string com2 = "";
 		in >> com1;
-		if (com1 == "AREA") {
+		if (in.peek() == '\n') {
+			invalid(in);
+		}
+		else if (com1 == "AREA") {
 			in >> com2;
 			if (com2 == "EVEN") {
 				std::cout << "AREA EVEN: " << areaEven(shapes) << '\n';

@@ -27,16 +27,25 @@ namespace myspace {
         int x = 0;
         int y = 0;
         in >> SeparatorIO{ '(' };
+        if (!in) {
+            return in;
+        }
         in >> x;
         if (in.peek() == ',' || in.peek() == '.') {
             in.setstate(std::ios::failbit);
         }
         in >> SeparatorIO{ ';' };
+        if (!in) {
+            return in;
+        }
         in >> y;
         if (in.peek() == ',' || in.peek() == '.') {
             in.setstate(std::ios::failbit);
         }
         in >> SeparatorIO{ ')' };
+        if (!in) {
+            return in;
+        }
         if (in) {
             point.x = x;
             point.y = y;
@@ -52,25 +61,26 @@ namespace myspace {
         Polygon temp;
         int corners = 0;
         in >> corners;
-        if (in.peek() == '.' || in.peek() == ',') {
-            in.setstate(std::ios::failbit);
+        if (corners == 0) {
+            in.clear();
+            in.ignore(1000, '\n');
             return in;
         }
-        Point p;
-        for (int i = 0; i < corners; ++i) {
-            in >> p;
-            if (in) {
-                temp.points.push_back(p);
-            }
-            else {
-                break;
-            }
+        std::string str;
+        std::getline(in, str, '\n');
+        std::istringstream iss(str);
+        std::copy(
+            std::istream_iterator< Point >(iss),
+            std::istream_iterator< Point >(),
+            std::back_inserter(temp.points)
+        );
+        if (temp.points.size() != corners) {
+            in.setstate(std::ios::failbit);
         }
         if (in) {
             poly = temp;
         }
         return in;
-       
     }
 
     std::ostream& operator<<(std::ostream& out, const Point& point)

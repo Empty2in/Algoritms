@@ -23,6 +23,9 @@ namespace myspace {
 	}
 
 	double area(const Polygon& poly) {
+		if (poly.points.empty()) {
+			return 0.0;
+		}
 		Point firstP = poly.points.front();
 		double ans = std::accumulate(
 			poly.points.begin() + 1,

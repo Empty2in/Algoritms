@@ -14,7 +14,7 @@ namespace myspace {
 	};
 
 	struct Area {
-		double ar;
+		double ar = 0.0;
 	};
 }
 

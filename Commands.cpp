@@ -32,43 +32,58 @@ namespace myspace {
 		return sum;
 	}
 
-	Area areaEven(const std::vector< Polygon >& poly) {
-		Area ar{};
+	bool isEmpty(const std::vector< Polygon >& poly) {
+		return (poly.size() == 0);
+	}
+
+	void evenOrOdd(Area& ar, const std::vector< Polygon >& poly, std::function< double(double, const Polygon&) > funct) {
 		ar.ar = std::accumulate(
 			poly.begin(),
 			poly.end(),
 			0.0,
-			std::bind(ifAreaEven(), _1, _2)
+			std::bind(funct, _1, _2)
 		);
+	}
+
+	Area areaEven(const std::vector< Polygon >& poly) {
+		Area ar{};
+		if (isEmpty(poly)) {
+			return ar;
+		}
+		evenOrOdd(ar, poly, ifAreaEven());
 		return ar;
 	}
 
 	Area areaOdd(const std::vector< Polygon >& poly) {
 		Area ar{};
-		ar.ar = std::accumulate(
-			poly.begin(),
-			poly.end(),
-			0.0,
-			std::bind(ifAreaOdd(), _1, _2)
-		);
+		if (isEmpty(poly)) {
+			return ar;
+		}
+		evenOrOdd(ar, poly, ifAreaOdd());
 		return ar;
 	}
 
 	Area areaMean(const std::vector< Polygon >& poly) {
-		Area ans{};
-		ans.ar = std::accumulate(
+		Area ar{};
+		if (isEmpty(poly)) {
+			return ar;
+		}
+		ar.ar = std::accumulate(
 			poly.cbegin(), 
 			poly.cend(), 
 			0.0,
 			[](double sum, const Polygon& p)
 			{ return sum + area(p); }
 		);
-		ans.ar /= poly.size();
-		return ans;
+		ar.ar /= poly.size();
+		return ar;
 	}
 
 	Area areaVert(const std::vector< Polygon >& poly, int corn) {
 		Area ar{};
+		if (isEmpty(poly)) {
+			return ar;
+		}
 		ar.ar = std::accumulate(
 			poly.begin(),
 			poly.end(),
@@ -79,6 +94,9 @@ namespace myspace {
 	}
 
 	int countEven(const std::vector< Polygon >& poly) {
+		if (isEmpty(poly)) {
+			return 0;
+		}
 		__int64 ans = std::count_if(
 			poly.cbegin(), 
 			poly.cend(),
@@ -89,6 +107,9 @@ namespace myspace {
 	}
 
 	int countOdd(const std::vector< Polygon >& poly) {
+		if (isEmpty(poly)) {
+			return 0;
+		}
 		__int64 ans = std::count_if(
 			poly.cbegin(), 
 			poly.cend(),
@@ -99,6 +120,9 @@ namespace myspace {
 	}
 
 	int countVert(const std::vector< Polygon >& poly, int corn) {
+		if (isEmpty(poly)) {
+			return 0;
+		}
 		__int64 ans = std::count_if(
 			poly.cbegin(), 
 			poly.cend(),
@@ -109,17 +133,27 @@ namespace myspace {
 	}
 
 	Area maxArea(const std::vector< Polygon >& poly) {
+		Area ar{};
+		if (isEmpty(poly)) {
+			return ar;
+		}
 		auto temp = std::max_element(
 			poly.begin(), 
 			poly.end(),
-			[](const Polygon& p1,const Polygon& p2)
-			{ return area(p1) < area(p2); }
+			std::bind(
+				std::less< int >{},
+				std::bind(area, _1),
+				std::bind(area, _2)
+			)
 		);
-		Area ans{ area(*temp) };
-		return ans;
+		ar.ar = area(*temp);
+		return ar;
 	}
 
 	int maxVert(const std::vector< Polygon >& poly) {
+		if (isEmpty(poly)) {
+			return 0;
+		}
 		auto ans = std::max_element(
 			poly.cbegin(), 
 			poly.cend(),
@@ -130,17 +164,27 @@ namespace myspace {
 	}
 
 	Area minArea(const std::vector< Polygon >& poly) {
+		Area ar{};
+		if (isEmpty(poly)) {
+			return ar;
+		}
 		auto temp = std::min_element(
 			poly.begin(), 
 			poly.end(),
-			[](const Polygon& p1, const Polygon& p2)
-			{ return area(p1) < area(p2); }
+			std::bind(
+				std::less< int >{},
+				std::bind(area, _1),
+				std::bind(area, _2)
+			)
 		);
-		Area ans{ area(*temp) };
-		return ans;
+		ar.ar = area(*temp);
+		return ar;
 	}
 
 	int minVert(const std::vector< Polygon >& poly) {
+		if (isEmpty(poly)) {
+			return 0;
+		}
 		auto ans = std::min_element(
 			poly.cbegin(), 
 			poly.cend(),
@@ -151,17 +195,26 @@ namespace myspace {
 	}
 
 	int lessArea(const Polygon& other, const std::vector< Polygon >& poly) {
+		if (isEmpty(poly)) {
+			return 0;
+		}
 		Area otherArea{ area(other) };
 		__int64 ans = std::count_if(
 			poly.cbegin(), 
 			poly.cend(),
-			[&otherArea](const Polygon& p)
-			{ return area(p) < otherArea.ar; }
+			std::bind(
+				std::less< int >{},
+				std::bind(area, _1),
+				otherArea.ar
+			)
 		);
 		return static_cast<int>(ans);
 	}
 
 	int maxSeq(const Polygon& other, const std::vector< Polygon >& poly) {
+		if (isEmpty(poly)) {
+			return 0;
+		}
 		int maxim = 0;
 		auto ans = std::accumulate(
 			poly.begin(),
